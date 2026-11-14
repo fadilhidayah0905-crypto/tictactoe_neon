@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Tic Tac Toe Multiplayer</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <!-- Musik Menu -->
+    <audio autoplay loop>
+        <source src="/static/sounds/menu_music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="overlay"></div>
+
+    <div class="container">
+
+        <h1>🐱 TIC TAC TOE 🐶</h1>
+
+        <h2 class="subtitle">
+            {% if theme == 'minecraft' %}Minecraft Edition{% else %}Neon Edition{% endif %}
+        </h2>
+
+        <div style="display:flex; gap:10px; justify-content:center; margin-bottom:18px;">
+            <a href="{{ url_for('set_theme', theme_name='minecraft') }}"
+               style="text-decoration:none; padding:8px 16px; border-radius:8px; font-weight:bold;
+                      {% if theme == 'minecraft' %}background:#8fd15c; color:#1a1a1a;{% else %}background:rgba(255,255,255,0.15); color:#e6e6e6;{% endif %}">
+                🟩 Minecraft
+            </a>
+            <a href="{{ url_for('set_theme', theme_name='neon') }}"
+               style="text-decoration:none; padding:8px 16px; border-radius:8px; font-weight:bold;
+                      {% if theme == 'neon' %}background:#00ffff; color:#1a1a1a;{% else %}background:rgba(255,255,255,0.15); color:#e6e6e6;{% endif %}">
+                💠 Neon
+            </a>
+        </div>
+
+        <div class="menu-page">
+
+            <button onclick="startSolo()">
+                🤖 1 Player (VS Komputer)
+            </button>
+
+            <button onclick="startGame()">
+                👥 2 Player (Multiplayer LAN)
+            </button>
+
+            <button onclick="startProgressive()">
+                📈 Mode Bertahap (3x3 → 12x12)
+            </button>
+
+            <button onclick="showHowToPlay()">
+                📖 Cara Bermain
+            </button>
+
+            <button onclick="showNetworkInfo()">
+                🌐 Cara Koneksi
+            </button>
+
+            <button onclick="exitGame()">
+                ❌ Keluar
+            </button>
+
+        </div>
+
+        <div
+            id="howtoplay"
+            class="howtoplay">
+
+            <h3>
+                🎯 Cara Bermain Dasar
+            </h3>
+
+            <br>
+
+            <p>
+                1. Dua pemain bergantian menaruh
+                tanda di kotak kosong.
+            </p>
+
+            <p>
+                2. Tanda yang sudah diletakkan
+                tidak bisa dipindah atau dihapus.
+            </p>
+
+            <p>
+                3. Menang jika berhasil menyusun
+                tanda sendiri berurutan tanpa putus:
+                mendatar, menurun, atau miring.
+            </p>
+
+            <h3>
+                📏 Syarat Menang Sesuai Papan
+            </h3>
+
+            <br>
+
+            <p>3x3 : 3 beruntun</p>
+            <p>4x4 : 4 beruntun</p>
+            <p>5x5 s/d 7x7 : 4 beruntun</p>
+            <p>8x8 s/d 12x12 : 5 beruntun</p>
+
+            <h3>
+                ⚙️ Aturan Tambahan
+            </h3>
+
+            <br>
+
+            <p>
+                ⏱️ Timer opsional: kalau diaktifkan,
+                setiap giliran punya batas waktu
+                mikir sekitar 30-50 detik. Kalau
+                waktu habis, giliranmu otomatis
+                diisi acak.
+            </p>
+
+            <p>
+                🤝 Kalau semua kotak penuh dan
+                belum ada yang menang = SERI,
+                tinggal main ulang.
+            </p>
+
+            <p>
+                🧠 Tips: kamu bisa bikin dua jalur
+                ancaman sekaligus (fork) supaya
+                lawan tidak sempat blokir keduanya.
+            </p>
+
+            <h3>
+                🎮 Mode Permainan
+            </h3>
+
+            <br>
+
+            <p>
+                🤖 1 Player: lawan komputer,
+                pilih level sendiri.
+            </p>
+
+            <p>
+                👥 2 Player: multiplayer via room code,
+                di jaringan WiFi yang sama.
+            </p>
+
+            <p>
+                📈 Mode Bertahap: mulai dari Level 1
+                (3x3). Menang → otomatis lanjut ke
+                level berikutnya sampai 12x12.
+                Kalah → otomatis diulang dari Level 1.
+                Seri → level yang sama diulang.
+            </p>
+
+            <p>
+                🎭 Setiap pemain bisa memilih
+                karakter/emoji sendiri
+                di halaman Pilih Level.
+            </p>
+
+            <p>
+                🏆 Pemenang ronde akan
+                mulai duluan di ronde berikutnya.
+            </p>
+
+        </div>
+
+        <div
+            id="networkInfo"
+            class="howtoplay"
+            style="display:none;">
+
+            <h3>
+                Cara Bermain di Laptop Lain
+            </h3>
+
+            <br>
+
+            <p>
+                Jalankan Flask di laptop host.
+            </p>
+
+            <p>
+                Kedua laptop harus berada
+                pada jaringan WiFi yang sama.
+            </p>
+
+            <p>
+                Buka alamat IP host:
+            </p>
+
+            <p>
+                contoh:
+            </p>
+
+            <p>
+                http://192.168.1.5:5000
+            </p>
+
+            <p>
+                Laptop kedua tinggal membuka
+                alamat tersebut melalui browser.
+            </p>
+
+        </div>
+
+    </div>
+
+<script>
+
+const clickSound =
+new Audio(
+    "/static/sounds/click.mp3"
+);
+
+function playClick(){
+
+    try{
+
+        clickSound.pause();
+
+        clickSound.currentTime = 0;
+
+        clickSound.play();
+
+    }
+    catch(err){}
+}
+
+function startGame(){
+
+    playClick();
+
+    setTimeout(() => {
+
+        window.location.href =
+        "/level";
+
+    },150);
+}
+
+function startSolo(){
+
+    playClick();
+
+    setTimeout(() => {
+
+        window.location.href =
+        "/level?mode=solo";
+
+    },150);
+}
+
+function startProgressive(){
+
+    playClick();
+
+    setTimeout(() => {
+
+        window.location.href =
+        "/level?mode=progressive";
+
+    },150);
+}
+
+function showHowToPlay(){
+
+    playClick();
+
+    const panel =
+    document.getElementById(
+        "howtoplay"
+    );
+
+    const network =
+    document.getElementById(
+        "networkInfo"
+    );
+
+    network.style.display =
+    "none";
+
+    if(
+        panel.style.display ===
+        "block"
+    ){
+
+        panel.style.display =
+        "none";
+    }
+    else{
+
+        panel.style.display =
+        "block";
+    }
+}
+
+function showNetworkInfo(){
+
+    playClick();
+
+    const panel =
+    document.getElementById(
+        "networkInfo"
+    );
+
+    const how =
+    document.getElementById(
+        "howtoplay"
+    );
+
+    how.style.display =
+    "none";
+
+    if(
+        panel.style.display ===
+        "block"
+    ){
+
+        panel.style.display =
+        "none";
+    }
+    else{
+
+        panel.style.display =
+        "block";
+    }
+}
+
+function exitGame(){
+
+    playClick();
+
+    setTimeout(() => {
+
+        alert(
+            "Terima kasih telah bermain 🐱 TIC TAC TOE 🐶"
+        );
+
+    },150);
+}
+
+</script>
+
+</body>
+</html>

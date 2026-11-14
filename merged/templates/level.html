@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Pilih Level Multiplayer</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <!-- Musik Menu -->
+    <audio autoplay loop>
+        <source src="/static/sounds/menu_music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="overlay"></div>
+
+    <div class="container">
+
+        <h1 id="pageTitle">PILIH LEVEL</h1>
+
+        <div class="level-grid">
+
+            <button onclick="selectLevel(1)">Level 1 (3x3)</button>
+            <button onclick="selectLevel(2)">Level 2 (4x4)</button>
+            <button onclick="selectLevel(3)">Level 3 (5x5)</button>
+            <button onclick="selectLevel(4)">Level 4 (6x6)</button>
+            <button onclick="selectLevel(5)">Level 5 (7x7)</button>
+
+            <button onclick="selectLevel(6)">Level 6 (8x8)</button>
+            <button onclick="selectLevel(7)">Level 7 (9x9)</button>
+            <button onclick="selectLevel(8)">Level 8 (10x10)</button>
+            <button onclick="selectLevel(9)">Level 9 (11x11)</button>
+            <button onclick="selectLevel(10)">Level 10 (12x12)</button>
+
+        </div>
+
+        <h2 style="color:white; margin-top:20px;">
+
+            Level Terpilih :
+
+            <span id="selectedLevelText">
+
+                Level 1 (3x3)
+
+            </span>
+
+        </h2>
+
+        <br>
+
+        <!-- PILIH KARAKTER / EMOJI -->
+
+        <h2 style="color:white;">
+
+            Pilih Karaktermu
+
+        </h2>
+
+        <br>
+
+        <div
+            id="emojiGrid"
+            class="level-grid">
+        </div>
+
+        <h3 style="color:white; margin-top:10px;">
+
+            Karakter Terpilih :
+
+            <span id="selectedEmojiText">🐱</span>
+
+        </h3>
+
+        <br>
+
+        <!-- TIMER GILIRAN (OPSIONAL) -->
+
+        <div
+            id="timerOption"
+            style="
+            color:white;
+            margin:15px 0;
+            ">
+
+            <label class="timer-option-label">
+
+                <input
+                    type="checkbox"
+                    id="useTimerCheckbox">
+
+                ⏱️ Gunakan Timer
+                (±30-50 detik / giliran)
+
+            </label>
+
+        </div>
+
+        <!-- CREATE ROOM / MULAI SOLO -->
+
+        <button
+            id="createRoomBtn"
+            class="big-action-btn"
+            onclick="createRoom()">
+
+            🎮 Buat Room
+
+        </button>
+
+        <br><br>
+
+        <div
+            id="roomInfo"
+            style="
+            display:none;
+            color:white;
+            ">
+
+            <h2>
+
+                ROOM BERHASIL DIBUAT
+
+            </h2>
+
+            <br>
+
+            <h1 id="roomCode">
+
+                XXXX
+
+            </h1>
+
+            <br>
+
+            <p>
+
+                Bagikan kode room ini
+                ke temanmu
+
+            </p>
+
+        </div>
+
+        <!-- JOIN ROOM (HANYA MODE MULTIPLAYER) -->
+
+        <div id="joinSection">
+
+        <hr style="margin:25px 0;">
+
+        <h2 style="color:white;">
+
+            Join Room
+
+        </h2>
+
+        <br>
+
+        <input
+
+            type="text"
+
+            id="joinCode"
+
+            maxlength="4"
+
+            placeholder="Kode Room"
+
+            style="
+            padding:12px;
+            font-size:18px;
+            text-align:center;
+            text-transform:uppercase;
+            border-radius:10px;
+            border:none;
+            width:220px;
+            ">
+
+        <br><br>
+
+        <button
+            class="big-action-btn"
+            onclick="joinRoom()">
+
+            🚪 Join Room
+
+        </button>
+
+        <br><br>
+
+        </div>
+
+        <div class="menu">
+
+            <button onclick="backMenu()">
+
+                🔙 Menu Utama
+
+            </button>
+
+        </div>
+
+    </div>
+
+<script>
+
+const clickSound =
+new Audio(
+    "/static/sounds/click.mp3"
+);
+
+const urlParams =
+new URLSearchParams(
+    window.location.search
+);
+
+const modeParam =
+urlParams.get("mode");
+
+const gameMode =
+modeParam === "solo"
+? "solo"
+: modeParam === "progressive"
+? "progressive"
+: "multiplayer";
+
+let selectedLevel = 1;
+
+// =========================
+// DAFTAR KARAKTER / EMOJI
+// =========================
+
+const emojiChoices = [
+    "🐱", "🐶", "🐰", "🦊",
+    "🐼", "🦁", "🐯", "🐵",
+    "🐧", "🐨"
+];
+
+let selectedEmoji =
+localStorage.getItem("mySymbol") || "🐱";
+
+function renderEmojiGrid(){
+
+    const grid =
+    document.getElementById("emojiGrid");
+
+    grid.innerHTML = "";
+
+    emojiChoices.forEach((emoji) => {
+
+        const btn =
+        document.createElement("button");
+
+        btn.textContent = emoji;
+
+        btn.style.fontSize = "26px";
+
+        if(emoji === selectedEmoji){
+
+            btn.style.border =
+            "3px solid #00ffff";
+        }
+
+        btn.onclick = () => {
+
+            try{
+
+                clickSound.currentTime = 0;
+                clickSound.play();
+
+            }
+            catch(err){}
+
+            selectedEmoji = emoji;
+
+            localStorage.setItem(
+                "mySymbol",
+                emoji
+            );
+
+            document.getElementById(
+                "selectedEmojiText"
+            ).innerHTML = emoji;
+
+            renderEmojiGrid();
+        };
+
+        grid.appendChild(btn);
+    });
+}
+
+const levelSizes = {
+
+    1:"3x3",
+    2:"4x4",
+    3:"5x5",
+    4:"6x6",
+    5:"7x7",
+    6:"8x8",
+    7:"9x9",
+    8:"10x10",
+    9:"11x11",
+    10:"12x12"
+};
+
+// =========================
+// PILIH LEVEL
+// =========================
+
+function selectLevel(level){
+
+    try{
+
+        clickSound.currentTime = 0;
+
+        clickSound.play();
+
+    }
+    catch(err){}
+
+    selectedLevel = level;
+
+    localStorage.setItem(
+        "selectedLevel",
+        level
+    );
+
+    document.getElementById(
+        "selectedLevelText"
+    ).innerHTML =
+
+    "Level " +
+    level +
+    " (" +
+    levelSizes[level] +
+    ")";
+}
+
+// =========================
+// CREATE ROOM
+// =========================
+
+async function createRoom(){
+
+    try{
+
+        clickSound.currentTime = 0;
+
+        clickSound.play();
+
+    }
+    catch(err){}
+
+    const response =
+    await fetch(
+        "/create_room",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":
+                "application/json"
+            },
+
+            body:JSON.stringify({
+
+                level:selectedLevel,
+
+                mode:gameMode,
+
+                symbol:selectedEmoji,
+
+                use_timer:
+                document.getElementById(
+                    "useTimerCheckbox"
+                ).checked
+
+            })
+        }
+    );
+
+    const data =
+    await response.json();
+
+    if(!data.success){
+
+        alert(
+            gameMode === "solo"
+            ? "Gagal memulai game"
+            : "Gagal membuat room"
+        );
+
+        return;
+    }
+
+    localStorage.setItem(
+        "roomCode",
+        data.room
+    );
+
+    localStorage.setItem(
+        "playerId",
+        data.player_id
+    );
+
+    localStorage.setItem(
+        "playerSymbol",
+        data.symbol
+    );
+
+    localStorage.setItem(
+        "mySymbol",
+        data.symbol
+    );
+
+    localStorage.setItem(
+        "isHost",
+        "true"
+    );
+
+    localStorage.setItem(
+        "selectedLevel",
+        data.level
+    );
+
+    localStorage.setItem(
+        "gameMode",
+        gameMode
+    );
+
+    // =========================
+    // MODE 1 PLAYER / BERTAHAP: LANGSUNG MASUK GAME
+    // =========================
+    if(gameMode === "solo" || gameMode === "progressive"){
+
+        window.location.href =
+        "/game";
+
+        return;
+    }
+
+    document.getElementById(
+        "roomInfo"
+    ).style.display =
+    "block";
+
+    document.getElementById(
+        "roomCode"
+    ).innerHTML =
+    data.room;
+
+    alert(
+        "Room berhasil dibuat!\nKode Room : " +
+        data.room
+    );
+
+    setTimeout(() => {
+
+        window.location.href =
+        "/game";
+
+    },1000);
+}
+
+// =========================
+// JOIN ROOM
+// =========================
+
+async function joinRoom(){
+
+    try{
+
+        clickSound.currentTime = 0;
+
+        clickSound.play();
+
+    }
+    catch(err){}
+
+    const roomCode =
+
+    document
+    .getElementById(
+        "joinCode"
+    )
+    .value
+    .trim()
+    .toUpperCase();
+
+    if(roomCode === ""){
+
+        alert(
+            "Masukkan kode room"
+        );
+
+        return;
+    }
+
+    const response =
+    await fetch(
+        "/join_room",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":
+                "application/json"
+            },
+
+            body:JSON.stringify({
+
+                room:roomCode,
+
+                symbol:selectedEmoji
+
+            })
+        }
+    );
+
+    const data =
+    await response.json();
+
+    if(!data.success){
+
+        alert(
+            data.message
+        );
+
+        return;
+    }
+
+    localStorage.setItem(
+        "roomCode",
+        roomCode
+    );
+
+    localStorage.setItem(
+        "playerId",
+        data.player_id
+    );
+
+    localStorage.setItem(
+        "playerSymbol",
+        data.symbol
+    );
+
+    localStorage.setItem(
+        "mySymbol",
+        data.symbol
+    );
+
+    localStorage.setItem(
+        "isHost",
+        "false"
+    );
+
+    localStorage.setItem(
+        "selectedLevel",
+        data.level
+    );
+
+    if(data.symbol !== selectedEmoji){
+
+        alert(
+            "Karakter pilihanmu sudah dipakai host, " +
+            "kamu diberi karakter: " +
+            data.symbol
+        );
+    }
+    else{
+
+        alert(
+            "Berhasil masuk room!"
+        );
+    }
+
+    window.location.href =
+    "/game";
+}
+
+// =========================
+// MENU
+// =========================
+
+function backMenu(){
+
+    try{
+
+        clickSound.currentTime = 0;
+
+        clickSound.play();
+
+    }
+    catch(err){}
+
+    setTimeout(() => {
+
+        window.location.href =
+        "/";
+
+    },150);
+}
+
+// =========================
+// LOAD
+// =========================
+
+window.onload = function(){
+
+    renderEmojiGrid();
+
+    const savedLevel =
+
+    parseInt(
+
+        localStorage.getItem(
+            "selectedLevel"
+        )
+
+    );
+
+    if(savedLevel){
+
+        selectedLevel =
+        savedLevel;
+
+        document.getElementById(
+            "selectedLevelText"
+        ).innerHTML =
+
+        "Level " +
+        savedLevel +
+        " (" +
+        levelSizes[savedLevel] +
+        ")";
+    }
+
+    if(gameMode === "solo"){
+
+        document.getElementById(
+            "pageTitle"
+        ).innerHTML =
+        "PILIH LEVEL - 1 PLAYER 🤖";
+
+        document.getElementById(
+            "createRoomBtn"
+        ).innerHTML =
+        "▶️ Mulai Main Sendiri";
+
+        document.getElementById(
+            "joinSection"
+        ).style.display =
+        "none";
+    }
+    else if(gameMode === "progressive"){
+
+        document.getElementById(
+            "pageTitle"
+        ).innerHTML =
+        "MODE BERTAHAP 📈 (3x3 → 12x12)";
+
+        // MODE BERTAHAP SELALU MULAI DARI LEVEL 1
+        selectedLevel = 1;
+
+        localStorage.setItem(
+            "selectedLevel",
+            1
+        );
+
+        document.querySelector(
+            ".level-grid"
+        ).style.display =
+        "none";
+
+        document.getElementById(
+            "selectedLevelText"
+        ).parentElement.innerHTML =
+
+        "Mode Bertahap selalu dimulai dari " +
+        "<b>Level 1 (3x3)</b>. Menang naik level, " +
+        "kalah balik ke Level 1 lagi.";
+
+        document.getElementById(
+            "createRoomBtn"
+        ).innerHTML =
+        "▶️ Mulai Mode Bertahap";
+
+        document.getElementById(
+            "joinSection"
+        ).style.display =
+        "none";
+    }
+    else{
+
+        document.getElementById(
+            "pageTitle"
+        ).innerHTML =
+        "PILIH LEVEL - 2 PLAYER 👥";
+    }
+}
+
+</script>
+
+</body>
+</html>

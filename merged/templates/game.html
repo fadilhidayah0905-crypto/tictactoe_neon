@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Tic Tac Toe Multiplayer</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <!-- Musik Game -->
+    <audio autoplay loop>
+        <source src="/static/sounds/game_music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="overlay"></div>
+
+    <div class="container">
+
+        <h1>🐱 TIC TAC TOE 🐶</h1>
+
+        <!-- ROOM INFO -->
+
+        <div id="roomContainer">
+
+            <h2 style="color:#00ffff;">
+
+                ROOM :
+
+                <span id="roomCode">
+
+                    ----
+
+                </span>
+
+            </h2>
+
+        </div>
+
+        <br>
+
+        <!-- LEVEL -->
+
+        <div id="levelTitle">
+
+            Level 1
+
+        </div>
+
+        <br>
+
+        <!-- PLAYER INFO -->
+
+        <div
+            id="playerInfo"
+            style="
+            color:#ffff00;
+            margin-bottom:10px;
+            font-size:20px;
+            ">
+
+            Simbol Kamu : ?
+
+        </div>
+
+        <!-- STATUS -->
+
+        <div id="status">
+
+            Menunggu pemain...
+
+        </div>
+
+        <!-- TIMER GILIRAN (OPSIONAL) -->
+
+        <div
+            id="timerText"
+            style="
+            color:#ff6b6b;
+            font-weight:bold;
+            margin-top:6px;
+            ">
+        </div>
+
+        <br>
+
+        <!-- PLAYER COUNT -->
+
+        <div
+            id="playerCount"
+            style="
+            color:white;
+            margin-bottom:15px;
+            ">
+
+            Player : 0 / 2
+
+        </div>
+
+        <!-- BOARD -->
+
+        <div
+            class="board"
+            id="board">
+        </div>
+
+        <!-- MENU -->
+
+        <div class="menu">
+
+            <button id="restartBtn" onclick="restartGame()">
+
+                🔄 Restart
+
+            </button>
+
+            <button id="nextLevelBtn" onclick="nextLevel()">
+
+                ➡️ Level Berikutnya
+
+            </button>
+
+            <button onclick="leaveRoom()">
+
+                🚪 Keluar Room
+
+            </button>
+
+            <button onclick="goToLevelMenu()">
+
+                🎯 Pilih Level
+
+            </button>
+
+            <button onclick="goToMainMenu()">
+
+                🏠 Menu Utama
+
+            </button>
+
+        </div>
+
+    </div>
+
+<script>
+
+    // =========================
+    // ROOM
+    // =========================
+
+    const initGameMode =
+
+    localStorage.getItem(
+        "gameMode"
+    ) || "multiplayer";
+
+    const initRoomCode =
+
+    localStorage.getItem(
+        "roomCode"
+    );
+
+    if(initGameMode === "solo"){
+
+        document
+        .getElementById(
+            "roomContainer"
+        )
+        .innerHTML =
+
+        "<h2 style=\"color:#00ffff;\">MODE : 🤖 1 PLAYER</h2>";
+    }
+    else if(initGameMode === "progressive"){
+
+        document
+        .getElementById(
+            "roomContainer"
+        )
+        .innerHTML =
+
+        "<h2 style=\"color:#00ffff;\">MODE : 📈 BERTAHAP</h2>";
+
+        // MODE BERTAHAP: LANJUT/ULANG LEVEL OTOMATIS,
+        // JADI TOMBOL RESTART & LEVEL BERIKUTNYA DISEMBUNYIKAN
+        document
+        .getElementById(
+            "restartBtn"
+        )
+        .style.display =
+        "none";
+
+        document
+        .getElementById(
+            "nextLevelBtn"
+        )
+        .style.display =
+        "none";
+    }
+    else{
+
+        document
+        .getElementById(
+            "roomCode"
+        )
+        .innerHTML =
+        initRoomCode || "----";
+    }
+
+
+    // =========================
+    // LEVEL
+    // =========================
+
+    const initSelectedLevel =
+
+    localStorage.getItem(
+        "selectedLevel"
+    ) || 1;
+
+    document
+    .getElementById(
+        "levelTitle"
+    )
+    .innerHTML =
+
+    "Level " +
+    initSelectedLevel;
+
+
+    // =========================
+    // PLAYER INFO
+    // =========================
+
+    const initPlayerSymbol =
+
+    localStorage.getItem(
+        "playerSymbol"
+    ) || "?";
+
+    document
+    .getElementById(
+        "playerInfo"
+    )
+    .innerHTML =
+
+    "Simbol Kamu : " +
+    initPlayerSymbol;
+
+
+    // =========================
+    // AUTO LEAVE ROOM
+    // =========================
+
+    window.addEventListener(
+
+        "beforeunload",
+
+        function(){
+
+            const room =
+            localStorage.getItem(
+                "roomCode"
+            );
+
+            const leavingPlayerId =
+            localStorage.getItem(
+                "playerId"
+            );
+
+            if(!room) return;
+
+            navigator.sendBeacon(
+
+                "/leave_room",
+
+                new Blob(
+
+                    [
+
+                        JSON.stringify({
+
+                            room:room,
+
+                            player_id:
+                            leavingPlayerId
+
+                        })
+
+                    ],
+
+                    {
+
+                        type:
+                        "application/json"
+
+                    }
+
+                )
+            );
+        }
+    );
+
+</script>
+
+<script src="/static/script.js"></script>
+
+</body>
+
+</html>
